@@ -3,6 +3,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+from PyQt5.QtWidgets import QScrollArea, QSizePolicy
 from pathlib import Path
 from PyQt5.QtWidgets import (
 	QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
