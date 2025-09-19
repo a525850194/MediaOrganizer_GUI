@@ -123,90 +123,181 @@ class ModernMediaOrganizer(QMainWindow):
 		return tab
 
 	def create_tools_tab(self):
-		s = self.scale
-		tab = QWidget(); layout = QVBoxLayout(tab); layout.setSpacing(int(12*s))
+	s = self.scale
 
-		# Topaz
-		gb_topaz = QGroupBox("Topaz Poster 增强"); gb_topaz.setStyleSheet(ModernStyles.get_group_style(s))
-		l1 = QHBoxLayout(gb_topaz)
-		self.topaz_src = QLineEdit(SETTINGS["VIDEO_SOURCE_DIR"]); self.topaz_src.setStyleSheet(ModernStyles.get_input_style(s))
-		self.topaz_work = QLineEdit(SETTINGS["IMAGE_SOURCE_DIR"]); self.topaz_work.setStyleSheet(ModernStyles.get_input_style(s))
-		btn_export = QPushButton("步骤1 导出并(可)启动Topaz"); btn_export.setStyleSheet(ModernStyles.get_primary_button_style(s)); btn_export.clicked.connect(self.action_export_posters)
-		btn_import = QPushButton("步骤2 导回增强Poster"); btn_import.setStyleSheet(ModernStyles.get_button_style(s)); btn_import.clicked.connect(self.action_import_posters)
-		l1.addWidget(QLabel("模板根:")); l1.addWidget(self.topaz_src); l1.addWidget(QLabel("工作目录:")); l1.addWidget(self.topaz_work); l1.addWidget(btn_export); l1.addWidget(btn_import)
-		layout.addWidget(gb_topaz)
+	# 用滚动区承载内容，防止内容太多被压乱
+	scroll = QScrollArea()
+	scroll.setWidgetResizable(True)
 
-		# ED2K
-		gb_ed2k = QGroupBox("ED2K 提取（自动解压）"); gb_ed2k.setStyleSheet(ModernStyles.get_group_style(s))
-		l2 = QHBoxLayout(gb_ed2k)
-		self.ed2k_base = QLineEdit(SETTINGS["ED2K_SOURCE_DIR"]); self.ed2k_base.setStyleSheet(ModernStyles.get_input_style(s))
-		self.ed2k_out = QLineEdit(SETTINGS["ED2K_OUTPUT_DIR"]); self.ed2k_out.setStyleSheet(ModernStyles.get_input_style(s))
-		self.ed2k_delete = QCheckBox("提取后删除TXT"); self.ed2k_delete.setChecked(True)
-		btn_ed2k = QPushButton("开始提取"); btn_ed2k.setStyleSheet(ModernStyles.get_primary_button_style(s)); btn_ed2k.clicked.connect(self.action_extract_ed2k)
-		l2.addWidget(QLabel("来源:")); l2.addWidget(self.ed2k_base); l2.addWidget(QLabel("输出到:")); l2.addWidget(self.ed2k_out); l2.addWidget(self.ed2k_delete); l2.addWidget(btn_ed2k)
-		layout.addWidget(gb_ed2k)
+	container = QWidget()
+	layout = QVBoxLayout(container)
+	layout.setSpacing(int(12*s))
+	layout.setContentsMargins(int(12*s), int(12*s), int(12*s), int(12*s))
 
-		# 封面替换
-		gb_cover = QGroupBox("封面替换（按大小）"); gb_cover.setStyleSheet(ModernStyles.get_group_style(s))
-		l3 = QHBoxLayout(gb_cover)
-		self.cover_repo = QLineEdit(SETTINGS["COVER_SOURCE_DIR"]); self.cover_repo.setStyleSheet(ModernStyles.get_input_style(s))
-		self.cover_target = QLineEdit(SETTINGS["VIDEO_SOURCE_DIR"]); self.cover_target.setStyleSheet(ModernStyles.get_input_style(s))
-		btn_cover = QPushButton("开始替换"); btn_cover.setStyleSheet(ModernStyles.get_primary_button_style(s)); btn_cover.clicked.connect(self.action_replace_covers)
-		l3.addWidget(QLabel("封面库:")); l3.addWidget(self.cover_repo); l3.addWidget(QLabel("目标根:")); l3.addWidget(self.cover_target); l3.addWidget(btn_cover)
-		layout.addWidget(gb_cover)
+	# 通用 SizePolicy：输入框可扩展，按钮固定
+	def conf_lineedit(le: QLineEdit):
+		le.setStyleSheet(ModernStyles.get_input_style(s))
+		le.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+	def conf_button(btn: QPushButton, primary=False):
+		btn.setStyleSheet(ModernStyles.get_primary_button_style(s) if primary else ModernStyles.get_button_style(s))
+		btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
-		# 字幕/书库/Coser
-		gb_more1 = QGroupBox("字幕 / 书库 / Coser"); gb_more1.setStyleSheet(ModernStyles.get_group_style(s))
-		l4 = QGridLayout(gb_more1)
-		self.sub_video_root = QLineEdit(SETTINGS["VIDEO_SOURCE_DIR"]); self.sub_video_root.setStyleSheet(ModernStyles.get_input_style(s))
-		self.sub_root = QLineEdit(SETTINGS["SUBTITLE_MATCH_SOURCE_DIR"]); self.sub_root.setStyleSheet(ModernStyles.get_input_style(s))
-		self.sub_prio = QLineEdit(",".join(SETTINGS.get("SUBTITLE_PRIORITY_DIRS", []))); self.sub_prio.setStyleSheet(ModernStyles.get_input_style(s))
-		btn_sub = QPushButton("字幕匹配复制"); btn_sub.setStyleSheet(ModernStyles.get_primary_button_style(s)); btn_sub.clicked.connect(self.action_match_subs)
-		self.srt_root = QLineEdit(SETTINGS["SRT_RENAME_DIR"]); self.srt_root.setStyleSheet(ModernStyles.get_input_style(s))
-		btn_srt = QPushButton("DMM字幕重命名"); btn_srt.setStyleSheet(ModernStyles.get_button_style(s)); btn_srt.clicked.connect(self.action_rename_srt)
-		self.book_src = QLineEdit(SETTINGS["BOOK_SOURCE_DIR"]); self.book_src.setStyleSheet(ModernStyles.get_input_style(s))
-		self.book_dst = QLineEdit(list(SETTINGS["BOOK_PRESET_TARGETS"].values())[0]); self.book_dst.setStyleSheet(ModernStyles.get_input_style(s))
-		btn_book = QPushButton("书库整理"); btn_book.setStyleSheet(ModernStyles.get_button_style(s)); btn_book.clicked.connect(self.action_books)
-		self.coser_root = QLineEdit(SETTINGS["COSER_SOURCE_DIR"]); self.coser_root.setStyleSheet(ModernStyles.get_input_style(s))
-		btn_coser2 = QPushButton("Coser二级整理"); btn_coser2.setStyleSheet(ModernStyles.get_button_style(s)); btn_coser2.clicked.connect(self.action_coser2)
-		btn_coserA = QPushButton("Coser首字母"); btn_coserA.setStyleSheet(ModernStyles.get_button_style(s)); btn_coserA.clicked.connect(self.action_coserA)
-		r = 0
-		l4.addWidget(QLabel("视频根:"), r,0); l4.addWidget(self.sub_video_root, r,1); l4.addWidget(QLabel("字幕根:"), r,2); l4.addWidget(self.sub_root, r,3); l4.addWidget(btn_sub, r,4); r+=1
-		l4.addWidget(QLabel("字幕优先(逗号分隔):"), r,0); l4.addWidget(self.sub_prio, r,1,1,3); r+=1
-		l4.addWidget(QLabel("SRT根:"), r,0); l4.addWidget(self.srt_root, r,1); l4.addWidget(btn_srt, r,4); r+=1
-		l4.addWidget(QLabel("书源:"), r,0); l4.addWidget(self.book_src, r,1); l4.addWidget(QLabel("目标:"), r,2); l4.addWidget(self.book_dst, r,3); l4.addWidget(btn_book, r,4); r+=1
-		l4.addWidget(QLabel("Coser根:"), r,0); l4.addWidget(self.coser_root, r,1); l4.addWidget(btn_coser2, r,3); l4.addWidget(btn_coserA, r,4)
-		layout.addWidget(gb_more1)
+	# Topaz Poster 增强
+	gb_topaz = QGroupBox("Topaz Poster 增强")
+	gb_topaz.setStyleSheet(ModernStyles.get_group_style(s))
+	l1 = QGridLayout(gb_topaz)
 
-		# 视频/重命名/NFO/Poster/下载
-		gb_more2 = QGroupBox("视频 / 重命名 / NFO / Poster / 下载"); gb_more2.setStyleSheet(ModernStyles.get_group_style(s))
-		l5 = QGridLayout(gb_more2)
-		self.vid_rename_dir = QLineEdit(SETTINGS["VIDEO_RENAME_DIR"]); self.vid_rename_dir.setStyleSheet(ModernStyles.get_input_style(s))
-		btn_vid_rename = QPushButton("视频批量重命名(-4K)"); btn_vid_rename.setStyleSheet(ModernStyles.get_button_style(s)); btn_vid_rename.clicked.connect(self.action_video_rename)
-		self.folder_mark_dir = QLineEdit(SETTINGS["VIDEO_SOURCE_DIR"]); self.folder_mark_dir.setStyleSheet(ModernStyles.get_input_style(s))
-		btn_markC = QPushButton("文件夹标记 -C"); btn_markC.setStyleSheet(ModernStyles.get_button_style(s)); btn_markC.clicked.connect(self.action_folder_mark_C)
-		btn_mark4K = QPushButton("文件夹标记 -4K(含内部)"); btn_mark4K.setStyleSheet(ModernStyles.get_button_style(s)); btn_mark4K.clicked.connect(self.action_folder_mark_4k)
-		self.nfo_src = QLineEdit(SETTINGS["VIDEO_SOURCE_DIR"]); self.nfo_src.setStyleSheet(ModernStyles.get_input_style(s))
-		self.nfo_dst = QLineEdit(SETTINGS["DEST_NFO_SORTED"]); self.nfo_dst.setStyleSheet(ModernStyles.get_input_style(s))
-		btn_nfo = QPushButton("NFO厂商整理"); btn_nfo.setStyleSheet(ModernStyles.get_button_style(s)); btn_nfo.clicked.connect(self.action_nfo)
-		self.poster_tpl = QLineEdit(SETTINGS["VIDEO_SOURCE_DIR"]); self.poster_tpl.setStyleSheet(ModernStyles.get_input_style(s))
-		self.poster_src = QLineEdit(SETTINGS["IMAGE_SOURCE_DIR"]); self.poster_src.setStyleSheet(ModernStyles.get_input_style(s))
-		btn_poster_match = QPushButton("Poster匹配替换"); btn_poster_match.setStyleSheet(ModernStyles.get_button_style(s)); btn_poster_match.clicked.connect(self.action_poster_match)
-		self.dl_url = QLineEdit(SETTINGS["DOWNLOAD_URL_TEMPLATE"]); self.dl_url.setStyleSheet(ModernStyles.get_input_style(s))
-		self.dl_save = QLineEdit(SETTINGS["DOWNLOAD_SAVE_DIR"]); self.dl_save.setStyleSheet(ModernStyles.get_input_style(s))
-		self.dl_range = QLineEdit("1-1000"); self.dl_range.setStyleSheet(ModernStyles.get_input_style(s))
-		btn_dl = QPushButton("序列下载"); btn_dl.setStyleSheet(ModernStyles.get_primary_button_style(s)); btn_dl.clicked.connect(self.action_seq_download)
-		r = 0
-		l5.addWidget(QLabel("重命名目录:"), r,0); l5.addWidget(self.vid_rename_dir, r,1,1,3); l5.addWidget(btn_vid_rename, r,4); r+=1
-		l5.addWidget(QLabel("文件夹标记目录:"), r,0); l5.addWidget(self.folder_mark_dir, r,1,1,2); l5.addWidget(btn_markC, r,3); l5.addWidget(btn_mark4K, r,4); r+=1
-		l5.addWidget(QLabel("NFO源:"), r,0); l5.addWidget(self.nfo_src, r,1); l5.addWidget(QLabel("目标:"), r,2); l5.addWidget(self.nfo_dst, r,3); l5.addWidget(btn_nfo, r,4); r+=1
-		l5.addWidget(QLabel("Poster模板根:"), r,0); l5.addWidget(self.poster_tpl, r,1); l5.addWidget(QLabel("图片源:"), r,2); l5.addWidget(self.poster_src, r,3); l5.addWidget(btn_poster_match, r,4); r+=1
-		l5.addWidget(QLabel("URL模板:"), r,0); l5.addWidget(self.dl_url, r,1,1,2); l5.addWidget(QLabel("保存至:"), r,3); l5.addWidget(self.dl_save, r,4); r+=1
-		l5.addWidget(QLabel("范围(起-止):"), r,0); l5.addWidget(self.dl_range, r,1); l5.addWidget(btn_dl, r,4)
-		layout.addWidget(gb_more2)
+	self.topaz_src = QLineEdit(SETTINGS["VIDEO_SOURCE_DIR"]); conf_lineedit(self.topaz_src)
+	self.topaz_work = QLineEdit(SETTINGS["IMAGE_SOURCE_DIR"]); conf_lineedit(self.topaz_work)
+	btn_export = QPushButton("步骤1 导出并(可)启动Topaz"); conf_button(btn_export, primary=True); btn_export.clicked.connect(self.action_export_posters)
+	btn_import = QPushButton("步骤2 导回增强Poster"); conf_button(btn_import); btn_import.clicked.connect(self.action_import_posters)
 
-		layout.addStretch()
-		return tab
+	r = 0
+	l1.addWidget(QLabel("模板根:"), r, 0); l1.addWidget(self.topaz_src, r, 1)
+	l1.addWidget(QLabel("工作目录:"), r, 2); l1.addWidget(self.topaz_work, r, 3)
+	l1.addWidget(btn_export, r, 4); l1.addWidget(btn_import, r, 5)
+	# 列伸展：输入框列扩展，按钮列不扩展
+	for c in (1, 3):
+		l1.setColumnStretch(c, 2)
+	for c in (0, 2, 4, 5):
+		l1.setColumnStretch(c, 0)
+
+	layout.addWidget(gb_topaz)
+
+	# ED2K 提取（自动解压）
+	gb_ed2k = QGroupBox("ED2K 提取（自动解压）")
+	gb_ed2k.setStyleSheet(ModernStyles.get_group_style(s))
+	l2 = QGridLayout(gb_ed2k)
+
+	self.ed2k_base = QLineEdit(SETTINGS["ED2K_SOURCE_DIR"]); conf_lineedit(self.ed2k_base)
+	self.ed2k_out  = QLineEdit(SETTINGS["ED2K_OUTPUT_DIR"]); conf_lineedit(self.ed2k_out)
+	self.ed2k_delete = QCheckBox("提取后删除TXT"); self.ed2k_delete.setChecked(True)
+	btn_ed2k = QPushButton("开始提取"); conf_button(btn_ed2k, primary=True); btn_ed2k.clicked.connect(self.action_extract_ed2k)
+
+	r = 0
+	l2.addWidget(QLabel("来源:"), r, 0); l2.addWidget(self.ed2k_base, r, 1, 1, 2)
+	l2.addWidget(QLabel("输出到:"), r, 3); l2.addWidget(self.ed2k_out, r, 4, 1, 2)
+	l2.addWidget(self.ed2k_delete, r, 6); l2.addWidget(btn_ed2k, r, 7)
+	l2.setColumnStretch(1, 2); l2.setColumnStretch(4, 2)
+	for c in (0, 3, 6, 7):
+		l2.setColumnStretch(c, 0)
+
+	layout.addWidget(gb_ed2k)
+
+	# 封面替换（按大小）
+	gb_cover = QGroupBox("封面替换（按大小）")
+	gb_cover.setStyleSheet(ModernStyles.get_group_style(s))
+	l3 = QGridLayout(gb_cover)
+
+	self.cover_repo   = QLineEdit(SETTINGS["COVER_SOURCE_DIR"]); conf_lineedit(self.cover_repo)
+	self.cover_target = QLineEdit(SETTINGS["VIDEO_SOURCE_DIR"]); conf_lineedit(self.cover_target)
+	btn_cover = QPushButton("开始替换"); conf_button(btn_cover, primary=True); btn_cover.clicked.connect(self.action_replace_covers)
+
+	r = 0
+	l3.addWidget(QLabel("封面库:"), r, 0); l3.addWidget(self.cover_repo, r, 1, 1, 3)
+	l3.addWidget(QLabel("目标根:"), r, 4); l3.addWidget(self.cover_target, r, 5, 1, 3)
+	l3.addWidget(btn_cover, r, 8)
+	l3.setColumnStretch(1, 2); l3.setColumnStretch(5, 2)
+	for c in (0, 4, 8):
+		l3.setColumnStretch(c, 0)
+
+	layout.addWidget(gb_cover)
+
+	# 字幕 / 书库 / Coser
+	gb_more1 = QGroupBox("字幕 / 书库 / Coser")
+	gb_more1.setStyleSheet(ModernStyles.get_group_style(s))
+	l4 = QGridLayout(gb_more1)
+
+	self.sub_video_root = QLineEdit(SETTINGS["VIDEO_SOURCE_DIR"]); conf_lineedit(self.sub_video_root)
+	self.sub_root = QLineEdit(SETTINGS["SUBTITLE_MATCH_SOURCE_DIR"]); conf_lineedit(self.sub_root)
+	self.sub_prio = QLineEdit(",".join(SETTINGS.get("SUBTITLE_PRIORITY_DIRS", []))); conf_lineedit(self.sub_prio)
+	btn_sub = QPushButton("字幕匹配复制"); conf_button(btn_sub, primary=True); btn_sub.clicked.connect(self.action_match_subs)
+
+	self.srt_root = QLineEdit(SETTINGS["SRT_RENAME_DIR"]); conf_lineedit(self.srt_root)
+	btn_srt = QPushButton("DMM字幕重命名"); conf_button(btn_srt); btn_srt.clicked.connect(self.action_rename_srt)
+
+	self.book_src = QLineEdit(SETTINGS["BOOK_SOURCE_DIR"]); conf_lineedit(self.book_src)
+	self.book_dst = QLineEdit(next(iter(SETTINGS["BOOK_PRESET_TARGETS"].values()))); conf_lineedit(self.book_dst)
+	btn_book = QPushButton("书库整理"); conf_button(btn_book); btn_book.clicked.connect(self.action_books)
+
+	self.coser_root = QLineEdit(SETTINGS["COSER_SOURCE_DIR"]); conf_lineedit(self.coser_root)
+	btn_coser2 = QPushButton("Coser二级整理"); conf_button(btn_coser2); btn_coser2.clicked.connect(self.action_coser2)
+	btn_coserA = QPushButton("Coser首字母"); conf_button(btn_coserA); btn_coserA.clicked.connect(self.action_coserA)
+
+	r = 0
+	l4.addWidget(QLabel("视频根:"), r,0); l4.addWidget(self.sub_video_root, r,1)
+	l4.addWidget(QLabel("字幕根:"), r,2); l4.addWidget(self.sub_root, r,3)
+	l4.addWidget(btn_sub, r,4); r+=1
+
+	l4.addWidget(QLabel("字幕优先(逗号分隔):"), r,0); l4.addWidget(self.sub_prio, r,1,1,3); r+=1
+	l4.addWidget(QLabel("SRT根:"), r,0); l4.addWidget(self.srt_root, r,1); l4.addWidget(btn_srt, r,2); r+=1
+
+	l4.addWidget(QLabel("书源:"), r,0); l4.addWidget(self.book_src, r,1)
+	l4.addWidget(QLabel("目标:"), r,2); l4.addWidget(self.book_dst, r,3)
+	l4.addWidget(btn_book, r,4); r+=1
+
+	l4.addWidget(QLabel("Coser根:"), r,0); l4.addWidget(self.coser_root, r,1)
+	l4.addWidget(btn_coser2, r,2); l4.addWidget(btn_coserA, r,3)
+
+	for c in (1, 3):
+		l4.setColumnStretch(c, 2)
+	for c in (0, 2, 4):
+		l4.setColumnStretch(c, 0)
+
+	layout.addWidget(gb_more1)
+
+	# 视频 / 重命名 / NFO / Poster / 下载
+	gb_more2 = QGroupBox("视频 / 重命名 / NFO / Poster / 下载")
+	gb_more2.setStyleSheet(ModernStyles.get_group_style(s))
+	l5 = QGridLayout(gb_more2)
+
+	self.vid_rename_dir = QLineEdit(SETTINGS["VIDEO_RENAME_DIR"]); conf_lineedit(self.vid_rename_dir)
+	btn_vid_rename = QPushButton("视频批量重命名(-4K)"); conf_button(btn_vid_rename); btn_vid_rename.clicked.connect(self.action_video_rename)
+
+	self.folder_mark_dir = QLineEdit(SETTINGS["VIDEO_SOURCE_DIR"]); conf_lineedit(self.folder_mark_dir)
+	btn_markC  = QPushButton("文件夹标记 -C"); conf_button(btn_markC); btn_markC.clicked.connect(self.action_folder_mark_C)
+	btn_mark4K = QPushButton("文件夹标记 -4K(含内部)"); conf_button(btn_mark4K); btn_mark4K.clicked.connect(self.action_folder_mark_4k)
+
+	self.nfo_src = QLineEdit(SETTINGS["VIDEO_SOURCE_DIR"]); conf_lineedit(self.nfo_src)
+	self.nfo_dst = QLineEdit(SETTINGS["DEST_NFO_SORTED"]); conf_lineedit(self.nfo_dst)
+	btn_nfo = QPushButton("NFO厂商整理"); conf_button(btn_nfo); btn_nfo.clicked.connect(self.action_nfo)
+
+	self.poster_tpl = QLineEdit(SETTINGS["VIDEO_SOURCE_DIR"]); conf_lineedit(self.poster_tpl)
+	self.poster_src = QLineEdit(SETTINGS["IMAGE_SOURCE_DIR"]); conf_lineedit(self.poster_src)
+	btn_poster_match = QPushButton("Poster匹配替换"); conf_button(btn_poster_match); btn_poster_match.clicked.connect(self.action_poster_match)
+
+	self.dl_url = QLineEdit(SETTINGS["DOWNLOAD_URL_TEMPLATE"]); conf_lineedit(self.dl_url)
+	self.dl_save = QLineEdit(SETTINGS["DOWNLOAD_SAVE_DIR"]); conf_lineedit(self.dl_save)
+	self.dl_range = QLineEdit("1-1000"); conf_lineedit(self.dl_range)
+	btn_dl = QPushButton("序列下载"); conf_button(btn_dl, primary=True); btn_dl.clicked.connect(self.action_seq_download)
+
+	r = 0
+	l5.addWidget(QLabel("重命名目录:"), r,0); l5.addWidget(self.vid_rename_dir, r,1,1,3); l5.addWidget(btn_vid_rename, r,4); r+=1
+
+	l5.addWidget(QLabel("文件夹标记目录:"), r,0); l5.addWidget(self.folder_mark_dir, r,1,1,2)
+	l5.addWidget(btn_markC, r,3); l5.addWidget(btn_mark4K, r,4); r+=1
+
+	l5.addWidget(QLabel("NFO源:"), r,0); l5.addWidget(self.nfo_src, r,1)
+	l5.addWidget(QLabel("目标:"), r,2); l5.addWidget(self.nfo_dst, r,3); l5.addWidget(btn_nfo, r,4); r+=1
+
+	l5.addWidget(QLabel("Poster模板根:"), r,0); l5.addWidget(self.poster_tpl, r,1)
+	l5.addWidget(QLabel("图片源:"), r,2); l5.addWidget(self.poster_src, r,3); l5.addWidget(btn_poster_match, r,4); r+=1
+
+	l5.addWidget(QLabel("URL模板:"), r,0); l5.addWidget(self.dl_url, r,1,1,2)
+	l5.addWidget(QLabel("保存至:"), r,3); l5.addWidget(self.dl_save, r,4); r+=1
+
+	l5.addWidget(QLabel("范围(起-止):"), r,0); l5.addWidget(self.dl_range, r,1); l5.addWidget(btn_dl, r,4)
+
+	# 列伸展：输入列扩展
+	l5.setColumnStretch(1, 2); l5.setColumnStretch(3, 2)
+	for c in (0, 2, 4):
+		l5.setColumnStretch(c, 0)
+
+	layout.addWidget(gb_more2)
+	layout.addStretch()
+
+	scroll.setWidget(container)
+	return scroll
 
 	def apply_modern_style(self):
 		self.setStyleSheet(ModernStyles.get_main_style(self.scale))
