@@ -1,0 +1,4 @@
+PyQt5==5.15.9
+Pillow==10.0.0
+pathlib2==2.3.7
+pyinstaller==5.13.2
