@@ -4,7 +4,7 @@
 import os, re, csv, shutil, subprocess, datetime, time
 from pathlib import Path
 from typing import Callable, List, Dict
-from .config import SETTINGS
+from config import SETTINGS	
 
 C_GREEN = ""; C_RED = ""; C_YELLOW = ""; C_RESET = ""; C_CYAN = ""; C_MAGENTA = ""; C_GRAY = ""
 
