@@ -7,6 +7,9 @@
 import PyInstaller.__main__
 import os
 import sys
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+os.environ["PYTHONIOENCODING"] = "utf-8"
 
 def build():
     """构建可执行文件"""
