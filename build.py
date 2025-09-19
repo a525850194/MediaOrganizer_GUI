@@ -17,6 +17,7 @@ def build():
     # 构建参数
     args = [
         'src/main.py',                    # 主文件
+        '--paths=src',                    # <— 新增
         '--onefile',                      # 打包为单个文件
         '--windowed',                     # 无控制台窗口
         '--name=MediaOrganizer_v7.0',     # 输出文件名
