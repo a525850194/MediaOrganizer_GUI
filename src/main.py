@@ -1,38 +1,37 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-媒体整理器 v7.0 - 现代化GUI版本
-主程序入口
-"""
 
-import sys
-import os
+import os, sys
+
+# HiDPI 支持（必须在 QApplication 创建前设置）
+os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
+os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
+os.environ["QT_SCALE_FACTOR_ROUNDING_POLICY"] = "RoundPreferFloor"
+
 from PyQt5.QtWidgets import QApplication
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QCoreApplication
 from PyQt5.QtGui import QFont
-
-# 添加src目录到Python路径
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from ui.main_window import ModernMediaOrganizer
 
 def main():
-    """主函数"""
-    # 创建应用程序
-    app = QApplication(sys.argv)
-    app.setApplicationName("媒体整理器")
-    app.setApplicationVersion("7.0")
-    
-    # 设置应用程序字体
-    font = QFont("Microsoft YaHei", 9)
-    app.setFont(font)
-    
-    # 创建主窗口
-    window = ModernMediaOrganizer()
-    window.show()
-    
-    # 运行应用程序
-    sys.exit(app.exec_())
+	# 高分屏属性
+	QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+	QCoreApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
 
-if __name__ == '__main__':
-    main()
+	app = QApplication(sys.argv)
+
+	# 以 96DPI 为基准计算缩放
+	dpi = app.primaryScreen().logicalDotsPerInch() or 96
+	scale = max(1.0, min(dpi / 96.0, 3.0))  # 限制 1.0~3.0，5K 一般在 2 左右
+	# 如需更大可放开下一行：scale *= 1.15
+	base_pt = int(10 * scale)
+	app.setFont(QFont("Microsoft YaHei", base_pt))
+	app.setStyleSheet(f"QWidget{{font-size:{int(12*scale)}px;}}")
+
+	window = ModernMediaOrganizer(scale=scale)
+	window.show()
+	sys.exit(app.exec_())
+
+if __name__ == "__main__":
+	main()
