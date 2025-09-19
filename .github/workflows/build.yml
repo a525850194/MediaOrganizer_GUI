@@ -26,6 +26,9 @@ jobs:
         python -m pip install pyinstaller
 
     - name: 构建可执行文件
+      env:
+        PYTHONIOENCODING: utf-8
+        PYTHONUTF8: "1"
       run: |
         python build.py
 
