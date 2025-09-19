@@ -14,8 +14,8 @@ from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 
-from ..organizer import MediaOrganizerWorker
-from .styles import ModernStyles
+from organizer import MediaOrganizerWorker
+from ui.styles import ModernStyles
 
 class ModernMediaOrganizer(QMainWindow):
     """现代化媒体整理器主窗口"""
